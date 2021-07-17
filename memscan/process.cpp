@@ -34,6 +34,13 @@ int ReadMemory(Command* cmd) {
 
         return SUCCESS_CODE;
     }
+    else if (!strcmp(type, FLOAT_TYPE)) {
+        float buffer = -1.0f;
+        ReadProcessMemory(process_info.process_handle, (void*)addr, &buffer, sizeof(float), NULL);
+        std::cout << "[+] Result: " + std::to_string(buffer) << std::endl;
+
+        return SUCCESS_CODE;
+    }
 
     return ERROR_CODE;
 }
@@ -64,6 +71,15 @@ int Context() {
     return SUCCESS_CODE;
 }
 
+void LoadModuleInfo(MODULEENTRY32 module_entry, const char *module_name) {
+    process_info.memory_info.base_address = module_entry.modBaseAddr;
+    process_info.memory_info.size = module_entry.dwSize;
+    free(process_info.memory_info.module_name);
+    process_info.memory_info.module_name = NULL;
+    process_info.memory_info.module_name = (char*)malloc((strlen(module_name) + 1) * sizeof(char));
+    memcpy(process_info.memory_info.module_name, module_name, (strlen(module_name) + 1) * sizeof(char));
+}
+
 int GetModuleBaseAddress(Command *cmd) {
 
     if (!process_info.process_handle || !process_info.pid || !process_info.process_name)
@@ -76,28 +92,14 @@ int GetModuleBaseAddress(Command *cmd) {
     
 	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, process_info.pid);
 
-    bool found = false;
-    if (Module32First(snapshot, &module_entry) && !strcmp(module_name, module_entry.szModule)) {
-        process_info.memory_info.base_address = module_entry.modBaseAddr;
-        process_info.memory_info.size = module_entry.dwSize;
-        free(process_info.memory_info.module_name);
-        process_info.memory_info.module_name = NULL;
-        process_info.memory_info.module_name = (char*)malloc((strlen(module_name) + 1) * sizeof(char));
-        memcpy(process_info.memory_info.module_name, module_name, (strlen(module_name) + 1) * sizeof(char));
-        found = true;
-    }
-
-    while (Module32Next(snapshot, &module_entry) && !found) {
-        if (!strcmp(module_name, module_entry.szModule)) {
-            process_info.memory_info.base_address = module_entry.modBaseAddr;
-            process_info.memory_info.size = module_entry.dwSize;
-            free(process_info.memory_info.module_name);
-            process_info.memory_info.module_name = NULL;
-            process_info.memory_info.module_name = (char*)malloc((strlen(module_name) + 1) * sizeof(char));
-            memcpy(process_info.memory_info.module_name, module_name, (strlen(module_name) + 1) * sizeof(char));
-            found = true;
-        }
-    }
+    if (Module32First(snapshot, &module_entry) && !strcmp(module_name, module_entry.szModule))
+        LoadModuleInfo(module_entry, module_name);
+    else
+        while (Module32Next(snapshot, &module_entry))
+            if (!strcmp(module_name, module_entry.szModule)) {
+                LoadModuleInfo(module_entry, module_name);
+                break;
+            }
 
 	CloseHandle(snapshot);
 
@@ -112,13 +114,14 @@ int GetProcessPID(const char *process_name) {
     HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
 
     int pid = 0;
-    if (Process32First(snapshot, &entry)) {
-        while (Process32Next(snapshot, &entry)) {
+    if (Process32First(snapshot, &entry) && !strcmp(entry.szExeFile, process_name))
+        pid = entry.th32ProcessID;
+    else
+        while (Process32Next(snapshot, &entry))
             if (!strcmp(entry.szExeFile, process_name)) {
                 pid = entry.th32ProcessID;
+                break;
             }
-        }
-    }
 
     CloseHandle(snapshot);
 
