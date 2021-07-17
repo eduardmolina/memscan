@@ -77,7 +77,7 @@ int GetModuleBaseAddress(Command *cmd) {
 	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPMODULE, process_info.pid);
 
     bool found = false;
-	if (Module32First(snapshot, &module_entry) && !strcmp(module_name, module_entry.szModule)) {
+    if (Module32First(snapshot, &module_entry) && !strcmp(module_name, module_entry.szModule)) {
         process_info.memory_info.base_address = module_entry.modBaseAddr;
         process_info.memory_info.size = module_entry.dwSize;
         free(process_info.memory_info.module_name);
@@ -85,7 +85,7 @@ int GetModuleBaseAddress(Command *cmd) {
         process_info.memory_info.module_name = (char*)malloc((strlen(module_name) + 1) * sizeof(char));
         memcpy(process_info.memory_info.module_name, module_name, (strlen(module_name) + 1) * sizeof(char));
         found = true;
-	}
+    }
 
     while (Module32Next(snapshot, &module_entry) && !found) {
         if (!strcmp(module_name, module_entry.szModule)) {
