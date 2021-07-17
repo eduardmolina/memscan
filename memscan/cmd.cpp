@@ -94,11 +94,11 @@ int RunRawCMD(RawCommand* raw_cmd) {
 		result = AttachProcess(cmd);
 	else if (cmd->option == CMDOption::MODULE_ADDRESS && cmd->argc == 2)
 		result = GetModuleBaseAddress(cmd);
-	else if (cmd->option == CMDOption::CONTEXT)
+	else if (cmd->option == CMDOption::CONTEXT && cmd->argc == 1)
 		result = Context();
-	else if (cmd->option == CMDOption::READ)
+	else if (cmd->option == CMDOption::READ && cmd->argc == 3)
 		result = ReadMemory(cmd);
-	else if (cmd->option == CMDOption::EXIT) {
+	else if (cmd->option == CMDOption::EXIT && cmd->argc == 1) {
 		DetachProcess();
 		result = EXIT_CODE;
 	}

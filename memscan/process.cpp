@@ -18,28 +18,30 @@ void DetachProcess() {
 int ReadMemory(Command* cmd) {
 
     char* type = cmd->args[1];
-    if (!type)
+    if (!type || *type == '\0')
         return ERROR_CODE;
     
     char* address = cmd->args[2];
-    if (!type)
+    if (!address || *address == '\0')
         return ERROR_CODE;
 
     uintptr_t addr = strtoull(address, NULL, 0);
 
     if (!strcmp(type, INT_TYPE)) {
-        int buffer = -1;
-        ReadProcessMemory(process_info.process_handle, (void*)addr, &buffer, sizeof(int), NULL);
-        std::cout << "[+] Result: " + std::to_string(buffer) << std::endl;
+        int buffer = INT_MAX;
+        bool ok = ReadProcessMemory(process_info.process_handle, (void*)addr, &buffer, sizeof(int), NULL);
+        if (ok)
+            std::cout << "[+] Result: " + std::to_string(buffer) << std::endl;
 
-        return SUCCESS_CODE;
+        return ok ? SUCCESS_CODE : ERROR_CODE;
     }
     else if (!strcmp(type, FLOAT_TYPE)) {
-        float buffer = -1.0f;
-        ReadProcessMemory(process_info.process_handle, (void*)addr, &buffer, sizeof(float), NULL);
-        std::cout << "[+] Result: " + std::to_string(buffer) << std::endl;
+        float buffer = FLT_MAX;
+        bool ok = ReadProcessMemory(process_info.process_handle, (void*)addr, &buffer, sizeof(float), NULL);
+        if (ok)
+            std::cout << "[+] Result: " + std::to_string(buffer) << std::endl;
 
-        return SUCCESS_CODE;
+        return ok ? SUCCESS_CODE : ERROR_CODE;
     }
 
     return ERROR_CODE;
@@ -53,27 +55,27 @@ int Context() {
         !process_info.memory_info.module_name)
         return ERROR_CODE;
 
-    std::cout << "ProcessName: ";
-    std::cout << process_info.process_name << std::endl;
-
     std::cout << "PID: ";
     std::cout << process_info.pid << std::endl;
+
+    std::cout << "ProcessName: ";
+    std::cout << process_info.process_name << std::endl;
 
     std::cout << "ModuleName: ";
     std::cout << process_info.memory_info.module_name << std::endl;
 
-    std::cout << "BaseAddress: ";
-    std::cout << std::hex << process_info.memory_info.base_address << std::endl;
+    std::cout << "ModuleSize: ";
+    std::cout << process_info.memory_info.module_size << std::endl;
 
-    std::cout << "Size: ";
-    std::cout << process_info.memory_info.size << std::endl;
+    std::cout << "BaseAddress: ";
+    std::cout << "0x" << std::hex << process_info.memory_info.base_address << std::endl;
 
     return SUCCESS_CODE;
 }
 
 void LoadModuleInfo(MODULEENTRY32 module_entry, const char *module_name) {
     process_info.memory_info.base_address = module_entry.modBaseAddr;
-    process_info.memory_info.size = module_entry.dwSize;
+    process_info.memory_info.module_size = module_entry.modBaseSize;
     free(process_info.memory_info.module_name);
     process_info.memory_info.module_name = NULL;
     process_info.memory_info.module_name = (char*)malloc((strlen(module_name) + 1) * sizeof(char));

@@ -10,7 +10,7 @@
 #define FLOAT_TYPE "float"
 
 typedef struct {
-	int size;
+	int module_size;
 	void *base_address;
 	char *module_name;
 } ProcessMemoryInfo;
