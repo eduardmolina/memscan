@@ -60,17 +60,19 @@ Command *ParseRawCMD(RawCommand* raw_cmd) {
 	}
 
 	Command* cmd = (Command *) malloc(sizeof(Command));
-	cmd->args = NULL;
-	cmd->argc = 0;
+	cmd->args = tokens;
+	cmd->argc = tokens_index + 1;
 	cmd->option = CMDOption::INVALID_CMD;
-	if (!strcmp(tokens[0], ATTACH_TOKEN)) {
+	if (!strcmp(tokens[0], ATTACH_TOKEN))
 		cmd->option = CMDOption::ATTACH;
-		cmd->args = tokens;
-		cmd->argc = tokens_index + 1;
-	}
-	else if (!strcmp(tokens[0], EXIT_TOKEN)) {
+	else if (!strcmp(tokens[0], MODULE_ADDRESS_TOKEN))
+		cmd->option = CMDOption::MODULE_ADDRESS;
+	else if (!strcmp(tokens[0], CONTEXT_TOKEN))
+		cmd->option = CMDOption::CONTEXT;
+	else if (!strcmp(tokens[0], READ_TOKEN))
+		cmd->option = CMDOption::READ;
+	else if (!strcmp(tokens[0], EXIT_TOKEN))
 		cmd->option = CMDOption::EXIT;
-	}
 
 	return cmd;
 }
@@ -88,10 +90,16 @@ int RunRawCMD(RawCommand* raw_cmd) {
 	Command *cmd = ParseRawCMD(raw_cmd);
 
 	int result = -1;
-	if (cmd->option == CMDOption::ATTACH)
+	if (cmd->option == CMDOption::ATTACH && cmd->argc == 2)
 		result = AttachProcess(cmd);
+	else if (cmd->option == CMDOption::MODULE_ADDRESS && cmd->argc == 2)
+		result = GetModuleBaseAddress(cmd);
+	else if (cmd->option == CMDOption::CONTEXT)
+		result = Context();
+	else if (cmd->option == CMDOption::READ)
+		result = ReadMemory(cmd);
 	else if (cmd->option == CMDOption::EXIT) {
-		CloseProcessHandle(process_handle);
+		DetachProcess();
 		result = EXIT_CODE;
 	}
 

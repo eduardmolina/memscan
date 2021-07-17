@@ -1,12 +1,18 @@
 #pragma once
 
 #define ATTACH_TOKEN "attach"
+#define MODULE_ADDRESS_TOKEN "module"
+#define CONTEXT_TOKEN "context"
+#define READ_TOKEN "read"
 #define EXIT_TOKEN "exit"
 
 #define EXIT_CODE 0
 
 enum class CMDOption {
 	ATTACH,
+	MODULE_ADDRESS,
+	CONTEXT,
+	READ,
 	EXIT,
 	INVALID_CMD
 };

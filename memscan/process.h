@@ -6,8 +6,26 @@
 #define SUCCESS_CODE 1
 #define ERROR_CODE 2
 
-extern HANDLE process_handle;
+#define INT_TYPE "int"
+#define FLOAT_TYPE "float"
+
+typedef struct {
+	int size;
+	void *base_address;
+	char *module_name;
+} ProcessMemoryInfo;
+
+typedef struct {
+	int pid;
+	char *process_name;
+	HANDLE process_handle;
+	ProcessMemoryInfo memory_info;
+} ProcessInfo;
+
+extern ProcessInfo process_info;
 
 int AttachProcess(Command *cmd);
-void CloseProcessHandle(HANDLE process_handle);
-
+void DetachProcess();
+int GetModuleBaseAddress(Command *cmd);
+int ReadMemory(Command* cmd);
+int Context();
