@@ -34,9 +34,9 @@ int GetProcessPID(const char *process_name) {
 
 int AttachProcess(Command *cmd) {
 
-	char* process_name = cmd->args[1];
-	if (!strlen(process_name))
-		return ERROR_CODE;
+    char* process_name = cmd->args[1];
+    if (!strlen(process_name))
+        return ERROR_CODE;
 
     int pid = GetProcessPID(process_name);
     process_handle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, pid);
